@@ -11,20 +11,11 @@ interface ProductCardProps {
   product: Product
 }
 
-  const formatRupiah = (number: number): string => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(number);
-  };
-
-
 export function ProductCard({ product }: ProductCardProps) {
   return (
-    <Card className="w-full max-w-sm overflow-hidden rounded-lg shadow-lg transition-all hover:shadow-xl">
+    <Card className="w-full overflow-hidden rounded-xl shadow-md transition-all hover:shadow-lg flex flex-col">
       <CardHeader className="p-0">
-        <div className="relative h-48 w-full">
+        <div className="relative h-48 w-full bg-gray-100 flex items-center justify-center overflow-hidden">
           {product.gambar ? (
             <Image
               src={product.gambar || "/placeholder.svg"}
@@ -34,20 +25,27 @@ export function ProductCard({ product }: ProductCardProps) {
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-500">No Image</div>
+            <div className="flex h-full w-full items-center justify-center text-gray-500 text-sm">No Image</div>
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-4">
-        <CardTitle className="mb-2 text-xl font-bold">{product.nama}</CardTitle>
-        <CardDescription className="text-muted-foreground">
+      <CardContent className="p-4 flex-grow">
+        <CardTitle className="mb-1 text-xl font-semibold text-gray-800 truncate">{product.nama}</CardTitle>
+        <CardDescription className="text-sm text-muted-foreground mb-2">
           Kode: {product.kode} | Stok: {product.stok}
         </CardDescription>
-        <p className="mt-2 text-2xl font-semibold text-primary">{formatRupiah(product.harga)}</p>
+        <p className="mt-3 text-2xl font-bold text-primary">Rp{product.harga.toLocaleString("id-ID")}</p>
+        {product.kategori && (
+          <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full mt-2">
+            {product.kategori}
+          </span>
+        )}
       </CardContent>
       <CardFooter className="flex justify-end p-4 pt-0">
         <Link href={`/products/${product.id}/edit`}>
-          <Button variant="outline">Lihat Detail / Edit</Button>
+          <Button variant="outline" className="w-full bg-transparent">
+            Lihat Detail / Edit
+          </Button>
         </Link>
       </CardFooter>
     </Card>

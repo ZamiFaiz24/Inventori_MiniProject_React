@@ -1,17 +1,30 @@
-// app/products/new/page.tsx
+// app/(admin)/inventory/add/page.tsx
 "use client"
 
 import { ProductForm } from "@/components/product-form"
-import { api, type Product } from "@/lib/api"
 
-export default function NewProductPage() {
-  const handleCreateProduct = async (product: Omit<Product, "id">) => {
-    await api.createProduct(product)
+export default function AddProductPage() {
+  const handleSubmit = async (formData: FormData) => {
+    try {
+      const res = await fetch("http://localhost:8000/api/barang", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        console.error("API error:", error)
+        alert("Gagal menyimpan data: " + JSON.stringify(error.errors || error.message))
+        return
+      }
+
+      const result = await res.json()
+      console.log("Produk berhasil disimpan:", result)
+    } catch (error) {
+      console.error("Gagal mengirim data:", error)
+      alert("Terjadi kesalahan saat menghubungi server.")
+    }
   }
 
-  return (
-    <div className="flex justify-center items-center min-h-screen py-8">
-      <ProductForm onSubmit={handleCreateProduct} />
-    </div>
-  )
+  return <ProductForm onSubmit={handleSubmit} />
 }

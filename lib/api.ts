@@ -15,18 +15,9 @@ export interface Product {
   gambar?: string // Sesuai dengan 'gambar' di Laravel (akan menjadi path/URL)
 }
 
-// Deklarasi fungsi getProductsFromStorage dan saveProductsToStorage
-function getProductsFromStorage(): Product[] {
-  const storedProducts = localStorage.getItem("products")
-  return storedProducts ? JSON.parse(storedProducts) : []
-}
-
-function saveProductsToStorage(products: Product[]): void {
-  localStorage.setItem("products", JSON.stringify(products))
-}
-
 export const api = {
   async getProducts(): Promise<Product[]> {
+    console.log("API: Mengambil produk dari:", `${API_BASE_URL}/barang`)
     try {
       const response = await fetch(`${API_BASE_URL}/barang`)
       if (!response.ok) {
@@ -35,18 +26,22 @@ export const api = {
           `Gagal memuat produk: ${response.status} ${response.statusText} - ${errorData.message || JSON.stringify(errorData)}`,
         )
       }
-      return response.json()
+      const data = await response.json()
+      console.log("API: Produk berhasil diambil:", data)
+      return data
     } catch (error) {
-      console.error("Error fetching products:", error)
-      throw error // Re-throw untuk ditangani di komponen
+      console.error("API: Error fetching products:", error)
+      throw error
     }
   },
 
   async getProductById(id: string): Promise<Product | undefined> {
+    console.log("API: Mengambil produk berdasarkan ID:", `${API_BASE_URL}/barang/${id}`)
     try {
       const response = await fetch(`${API_BASE_URL}/barang/${id}`)
       if (response.status === 404) {
-        return undefined // Produk tidak ditemukan
+        console.log("API: Produk tidak ditemukan (404) untuk ID:", id)
+        return undefined
       }
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Kesalahan tidak diketahui" }))
@@ -54,133 +49,89 @@ export const api = {
           `Gagal memuat produk (ID: ${id}): ${response.status} ${response.statusText} - ${errorData.message || JSON.stringify(errorData)}`,
         )
       }
-      return response.json()
+      const data = await response.json()
+      console.log("API: Produk berhasil diambil berdasarkan ID:", data)
+      return data
     } catch (error) {
-      console.error(`Error fetching product with ID ${id}:`, error)
+      console.error(`API: Error fetching product with ID ${id}:`, error)
       throw error
     }
   },
 
-  // Mengubah parameter menjadi FormData untuk mendukung upload file
   async createProduct(formData: FormData): Promise<Product> {
+    console.log("API: Mengirim data produk baru ke:", `${API_BASE_URL}/barang`)
     try {
-      // Simulasikan penundaan jaringan untuk mock API
-      await new Promise((resolve) => setTimeout(resolve, 700))
-
-      const newProduct: Product = {
-        id: Math.random().toString(36).substring(2, 15), // ID acak untuk mock
-        nama: formData.get("nama") as string,
-        kode: formData.get("kode") as string,
-        stok: Number.parseInt(formData.get("stok") as string),
-        harga: Number.parseFloat(formData.get("harga") as string),
-        kategori: (formData.get("kategori") as string) || undefined,
-        deskripsi: (formData.get("deskripsi") as string) || undefined,
-        gambar: undefined, // Default undefined
+      // Mengubah FormData menjadi objek JSON jika tidak ada file yang diupload
+      // Karena sekarang kita hanya mengirim URL, kita bisa menggunakan JSON
+      const data = Object.fromEntries(formData.entries())
+      // Hapus _method jika ada, karena ini hanya untuk FormData dengan POST untuk simulasi PUT/PATCH
+      if (data._method) {
+        delete data._method
       }
 
-      const imageFile = formData.get("gambar") as File | null
-      if (imageFile && imageFile.size > 0) {
-        // Simulasikan upload file dengan membuat path dummy
-        const fileName = `${Date.now()}-${imageFile.name}`
-        newProduct.gambar = `/uploads/${fileName}` // Simpan path dummy
-      }
-
-      const products = getProductsFromStorage()
-      products.push(newProduct)
-      saveProductsToStorage(products)
-      return newProduct
-
-      /*
-      // Untuk integrasi Laravel nyata, gunakan kode ini:
       const response = await fetch(`${API_BASE_URL}/barang`, {
         method: "POST",
-        // Penting: Jangan set 'Content-Type' header secara manual saat mengirim FormData,
-        // browser akan mengaturnya secara otomatis dengan boundary yang benar.
-        // headers: {
-        //   "Accept": "application/json",
-        // },
-        body: formData, // Kirim FormData langsung
+        headers: {
+          "Content-Type": "application/json", // Penting: Set header ini untuk JSON
+          Accept: "application/json",
+        },
+        body: JSON.stringify(data), // Kirim sebagai JSON string
       })
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Kesalahan tidak diketahui" }))
+        console.error("API: Gagal membuat produk, respons error:", errorData)
         throw new Error(
           `Gagal membuat produk: ${response.status} ${response.statusText} - ${errorData.message || JSON.stringify(errorData)}`,
         )
       }
-      return response.json()
-      */
+      const responseData = await response.json()
+      console.log("API: Produk baru berhasil dibuat, respons:", responseData)
+      return responseData
     } catch (error) {
-      console.error("Error creating product:", error)
+      console.error("API: Error creating product:", error)
       throw error
     }
   },
 
-  // Mengubah parameter menjadi FormData untuk mendukung upload file
   async updateProduct(id: string, formData: FormData): Promise<Product | undefined> {
+    console.log("API: Mengirim data update produk ke:", `${API_BASE_URL}/barang/${id}`)
     try {
-      // Simulasikan penundaan jaringan untuk mock API
-      await new Promise((resolve) => setTimeout(resolve, 700))
+      // Mengubah FormData menjadi objek JSON
+      const data = Object.fromEntries(formData.entries())
+      // Ambil _method dari FormData
+      const method = (data._method as string)?.toUpperCase() || "PUT"
+      delete data._method // Hapus _method dari data yang akan dikirim
 
-      const products = getProductsFromStorage()
-      const index = products.findIndex((p) => p.id === id)
-
-      if (index > -1) {
-        const existingProduct = products[index]
-        const updatedFields: Partial<Product> = {
-          nama: formData.get("nama") as string,
-          kode: formData.get("kode") as string,
-          stok: Number.parseInt(formData.get("stok") as string),
-          harga: Number.parseFloat(formData.get("harga") as string),
-          kategori: (formData.get("kategori") as string) || undefined,
-          deskripsi: (formData.get("deskripsi") as string) || undefined,
-        }
-
-        const imageFile = formData.get("gambar") as File | null
-        if (imageFile && imageFile.size > 0) {
-          // Simulasikan upload file
-          const fileName = `${Date.now()}-${imageFile.name}`
-          updatedFields.gambar = `/uploads/${fileName}`
-        } else if (formData.has("gambar_removed") && formData.get("gambar_removed") === "true") {
-          // Tangani penghapusan gambar eksplisit
-          updatedFields.gambar = undefined
-        } else {
-          // Jika tidak ada file baru dan tidak dihapus, pertahankan gambar yang sudah ada
-          updatedFields.gambar = existingProduct.gambar
-        }
-
-        products[index] = { ...existingProduct, ...updatedFields }
-        saveProductsToStorage(products)
-        return products[index]
-      }
-      return undefined
-
-      /*
-      // Untuk integrasi Laravel nyata, gunakan kode ini:
       const response = await fetch(`${API_BASE_URL}/barang/${id}`, {
-        method: "POST", // Laravel biasanya menggunakan POST untuk PUT/PATCH dengan FormData dan _method
-        // headers: {
-        //   "Accept": "application/json",
-        // },
-        body: formData, // Kirim FormData langsung
+        method: method, // Gunakan metode PUT/PATCH yang sebenarnya
+        headers: {
+          "Content-Type": "application/json", // Penting: Set header ini untuk JSON
+          Accept: "application/json",
+        },
+        body: JSON.stringify(data), // Kirim sebagai JSON string
       })
       if (response.status === 404) {
+        console.log("API: Produk tidak ditemukan (404) saat update untuk ID:", id)
         return undefined
       }
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Kesalahan tidak diketahui" }))
+        console.error("API: Gagal memperbarui produk, respons error:", errorData)
         throw new Error(
           `Gagal memperbarui produk (ID: ${id}): ${response.status} ${response.statusText} - ${errorData.message || JSON.stringify(errorData)}`,
         )
       }
-      return response.json()
-      */
+      const responseData = await response.json()
+      console.log("API: Produk berhasil diperbarui, respons:", responseData)
+      return responseData
     } catch (error) {
-      console.error(`Error updating product with ID ${id}:`, error)
+      console.error(`API: Error updating product with ID ${id}:`, error)
       throw error
     }
   },
 
   async deleteProduct(id: string): Promise<boolean> {
+    console.log("API: Mengirim permintaan hapus produk untuk ID:", `${API_BASE_URL}/barang/${id}`)
     try {
       const response = await fetch(`${API_BASE_URL}/barang/${id}`, {
         method: "DELETE",
@@ -189,17 +140,20 @@ export const api = {
         },
       })
       if (response.status === 404) {
+        console.log("API: Produk tidak ditemukan (404) saat hapus untuk ID:", id)
         return false // Produk tidak ditemukan untuk dihapus
       }
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Kesalahan tidak diketahui" }))
+        console.error("API: Gagal menghapus produk, respons error:", errorData)
         throw new Error(
           `Gagal menghapus produk (ID: ${id}): ${response.status} ${response.statusText} - ${errorData.message || JSON.stringify(errorData)}`,
         )
       }
+      console.log("API: Produk berhasil dihapus untuk ID:", id)
       return true // Berhasil dihapus (Laravel biasanya mengembalikan 204 No Content)
     } catch (error) {
-      console.error(`Error deleting product with ID ${id}:`, error)
+      console.error(`API: Error deleting product with ID ${id}:`, error)
       throw error
     }
   },

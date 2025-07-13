@@ -17,7 +17,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import type { Product } from "@/lib/api"
-import { Edit, Trash2, PlusCircle } from "lucide-react"
+import { Edit, Trash2 } from "lucide-react"
+import { Package } from "lucide-react" // Declaring the Package variable
 
 interface ProductListProps {
   products: Product[]
@@ -40,38 +41,27 @@ export function ProductList({ products, onDelete }: ProductListProps) {
       setIsDeleteDialogOpen(false)
     }
   }
-  const formatRupiah = (number: number): string => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(number);
-  };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Daftar Inventaris Aki Mainan</h1>
-        <Link href="/products/new">
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" /> Tambah Produk Baru
-          </Button>
-        </Link>
-      </div>
-
+    <>
       {products.length === 0 ? (
-        <p className="text-center text-muted-foreground">
-          Tidak ada produk dalam inventaris. Silakan tambahkan yang baru.
-        </p>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] text-center text-muted-foreground">
+          <Package className="h-16 w-16 mb-4 text-gray-400" />
+          <p className="text-xl font-medium">Inventaris kosong.</p>
+          <p className="text-md">Belum ada produk yang ditambahkan.</p>
+          <Link href="/products/new" className="mt-6">
+            <Button>Tambah Produk Pertama</Button>
+          </Link>
+        </div>
       ) : (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="overflow-x-auto rounded-lg border shadow-sm">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-gray-50">
               <TableRow>
-                <TableHead>Gambar</TableHead>
+                <TableHead className="w-[80px]">Gambar</TableHead>
                 <TableHead>Nama Produk</TableHead>
                 <TableHead>Kode Produk</TableHead>
-                <TableHead>Jumlah Stok</TableHead>
+                <TableHead>Stok</TableHead>
                 <TableHead>Harga</TableHead>
                 <TableHead>Kategori</TableHead>
                 <TableHead>Deskripsi</TableHead>
@@ -80,7 +70,7 @@ export function ProductList({ products, onDelete }: ProductListProps) {
             </TableHeader>
             <TableBody>
               {products.map((product) => (
-                <TableRow key={product.id}>
+                <TableRow key={product.id} className="hover:bg-gray-50">
                   <TableCell>
                     {product.gambar ? (
                       <Image
@@ -88,20 +78,20 @@ export function ProductList({ products, onDelete }: ProductListProps) {
                         alt={product.nama}
                         width={64}
                         height={64}
-                        className="object-cover rounded-md"
+                        className="object-cover rounded-md aspect-square"
                       />
                     ) : (
-                      <div className="w-16 h-16 bg-gray-200 flex items-center justify-center rounded-md text-sm text-gray-500">
+                      <div className="w-16 h-16 bg-gray-200 flex items-center justify-center rounded-md text-xs text-gray-500">
                         No Image
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="font-medium">{product.nama}</TableCell>
-                  <TableCell>{product.kode}</TableCell>
-                  <TableCell>{product.stok}</TableCell>
-                  <TableCell>{formatRupiah(product.harga)}</TableCell>
-                  <TableCell>{product.kategori || "-"}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{product.deskripsi || "-"}</TableCell>
+                  <TableCell className="font-medium text-gray-800">{product.nama}</TableCell>
+                  <TableCell className="text-gray-600">{product.kode}</TableCell>
+                  <TableCell className="text-gray-600">{product.stok}</TableCell>
+                  <TableCell className="text-gray-600">Rp{product.harga.toLocaleString("id-ID")}</TableCell>
+                  <TableCell className="text-gray-600">{product.kategori || "-"}</TableCell>
+                  <TableCell className="max-w-[200px] truncate text-gray-600">{product.deskripsi || "-"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Link href={`/products/${product.id}/edit`}>
@@ -140,6 +130,6 @@ export function ProductList({ products, onDelete }: ProductListProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   )
 }

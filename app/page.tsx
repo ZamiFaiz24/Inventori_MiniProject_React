@@ -6,7 +6,7 @@ import { ProductCard } from "@/components/product-card"
 import { api, type Product } from "@/lib/api"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, Package } from "lucide-react" // Import icon Package
+import { PlusCircle, Package } from "lucide-react"
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -31,7 +31,11 @@ export default function HomePage() {
   }, [])
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center text-lg">Memuat produk...</div>
+    return (
+      <div className="flex min-h-screen items-center justify-center text-lg text-muted-foreground">
+        Memuat produk...
+      </div>
+    )
   }
 
   if (error) {
@@ -39,19 +43,17 @@ export default function HomePage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Katalog Aki Mainan</h1>
-        <div className="flex gap-2">
+    <div className="container mx-auto py-8 px-4 md:px-6">
+      <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl text-gray-900">Katalog Aki Mainan</h1>
+        <div className="flex flex-col sm:flex-row gap-3">
           <Link href="/products/new">
-            <Button>
+            <Button className="w-full sm:w-auto">
               <PlusCircle className="mr-2 h-4 w-4" /> Tambah Produk Baru
             </Button>
           </Link>
           <Link href="/inventory">
-            {" "}
-            {/* Tombol untuk ke halaman manajemen stok */}
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto bg-transparent">
               <Package className="mr-2 h-4 w-4" /> Kelola Inventaris
             </Button>
           </Link>
@@ -59,11 +61,16 @@ export default function HomePage() {
       </div>
 
       {products.length === 0 ? (
-        <p className="text-center text-muted-foreground">
-          Tidak ada produk dalam katalog. Silakan tambahkan yang baru.
-        </p>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] text-center text-muted-foreground">
+          <Package className="h-16 w-16 mb-4 text-gray-400" />
+          <p className="text-xl font-medium">Tidak ada produk dalam katalog.</p>
+          <p className="text-md">Silakan tambahkan produk baru untuk ditampilkan di sini.</p>
+          <Link href="/products/new" className="mt-6">
+            <Button>Tambah Produk Pertama</Button>
+          </Link>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
